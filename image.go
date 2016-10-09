@@ -52,9 +52,9 @@ func NewImage(path, format string, size uint64) Image {
 	return img
 }
 
-// LoadImage retreives the information of the specified image
+// OpenImage retreives the information of the specified image
 // file into an Image data structure
-func LoadImage(path string) (Image, error) {
+func OpenImage(path string) (Image, error) {
 	var img Image
 
 	if _, err := os.Stat(path); os.IsNotExist(err) {

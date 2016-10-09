@@ -12,7 +12,7 @@ const (
 )
 
 func snapshots() {
-	img, err := qemu.LoadImage("debian.qcow2")
+	img, err := qemu.OpenImage("debian.qcow2")
 	if err != nil {
 		log.Fatal(err)
 	}
