@@ -55,8 +55,25 @@ func NewImage(path, format string, size uint64) Image {
 // LoadImage retreives the information of the specified image
 // file into an Image data structure
 func LoadImage(path string) (Image, error) {
+	var img Image
+
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		return img, err
+	}
+
+	img.Path = path
+
+	err := img.retreiveInfos()
+	if err != nil {
+		return img, err
+	}
+
+	return img, nil
+}
+
+func (i *Image) retreiveInfos() error {
 	type snapshotInfo struct {
-		ID        int    `json:"id"`
+		ID        string `json:"id"`
 		Name      string `json:"name"`
 		DateSec   int64  `json:"date-sec"`
 		DateNsec  int64  `json:"date-nsec"`
@@ -68,58 +85,64 @@ func LoadImage(path string) (Image, error) {
 		Snapshots []snapshotInfo `json:"snapshots"`
 
 		Format string `json:"format"`
-		Size   uint64 `json:"virtual_size"`
+		Size   uint64 `json:"virtual-size"`
 	}
 
-	var img Image
 	var info imgInfo
 
-	if _, err := os.Stat(path); os.IsNotExist(err) {
-		return img, err
-	}
-
-	cmd := exec.Command("qemu-img", "info", "--output=json", path)
+	cmd := exec.Command("qemu-img", "info", "--output=json", i.Path)
 
 	out, err := cmd.CombinedOutput()
 	if err != nil {
-		return img, fmt.Errorf("'qemu-img info' output: %s", oneLine(out))
+		return fmt.Errorf("'qemu-img info' output: %s", oneLine(out))
 	}
 
 	err = json.Unmarshal(out, &info)
 	if err != nil {
-		return img, fmt.Errorf("'qemu-img info' invalid json output: %s", oneLine(out))
+		return fmt.Errorf("'qemu-img info' invalid json output")
 	}
 
-	img.Path = path
-	img.Format = info.Format
-	img.Size = info.Size
+	i.Format = info.Format
+	i.Size = info.Size
 
+	i.snapshots = make([]Snapshot, 0)
 	for _, snap := range info.Snapshots {
 		var s Snapshot
-		s.ID = snap.ID
+
+		id, err := strconv.Atoi(snap.ID)
+		if err != nil {
+			continue
+		}
+
+		s.ID = id
 		s.Name = snap.Name
 		s.Date = time.Unix(snap.DateSec, snap.DateNsec)
 		s.VMClock = time.Unix(snap.ClockSec, snap.ClockNsec)
 
-		img.snapshots = append(img.snapshots, s)
+		i.snapshots = append(i.snapshots, s)
 	}
 
-	return img, nil
+	return nil
 }
 
 // Snapshots returns the snapshots contained
 // within the image
-func (i Image) Snapshots() []Snapshot {
-	if len(i.snapshots) == 0 {
-		return make([]Snapshot, 0)
+func (i Image) Snapshots() ([]Snapshot, error) {
+	err := i.retreiveInfos()
+	if err != nil {
+		return nil, err
 	}
 
-	return i.snapshots
+	if len(i.snapshots) == 0 {
+		return make([]Snapshot, 0), nil
+	}
+
+	return i.snapshots, nil
 }
 
 // CreateSnapshot creates a snapshot of the image
 // with the specified name
-func (i Image) CreateSnapshot(name string) error {
+func (i *Image) CreateSnapshot(name string) error {
 	cmd := exec.Command("qemu-img", "snapshot", "-c", name, i.Path)
 
 	out, err := cmd.CombinedOutput()
