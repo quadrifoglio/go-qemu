@@ -107,9 +107,19 @@ func LoadImage(path string) (Image, error) {
 	return img, nil
 }
 
+// Snapshots returns the snapshots contained
+// within the image
+func (i Image) Snapshots() []Snapshot {
+	if len(i.snapshots) == 0 {
+		return make([]Snapshot, 0)
+	}
+
+	return i.snapshots
+}
+
 // CreateSnapshot creates a snapshot of the image
 // with the specified name
-func (i *Image) CreateSnapshot(name string) error {
+func (i Image) CreateSnapshot(name string) error {
 	cmd := exec.Command("qemu-img", "snapshot", "-c", name, i.Path)
 
 	out, err := cmd.CombinedOutput()
@@ -120,14 +130,17 @@ func (i *Image) CreateSnapshot(name string) error {
 	return nil
 }
 
-// Snapshots returns the snapshots contained
-// within the image
-func (i Image) Snapshots() []Snapshot {
-	if len(i.snapshots) == 0 {
-		return make([]Snapshot, 0)
+// RestoreSnapshot restores the the image to the
+// specified snapshot name
+func (i Image) RestoreSnapshot(name string) error {
+	cmd := exec.Command("qemu-img", "snapshot", "-a", name, i.Path)
+
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("'qemu-img snapshot' output: %s", oneLine(out))
 	}
 
-	return i.snapshots
+	return nil
 }
 
 // SetBackingFile sets a backing file for the image
