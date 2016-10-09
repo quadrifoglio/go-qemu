@@ -1,6 +1,7 @@
 package qemu
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"os/exec"
@@ -35,6 +36,40 @@ func NewImage(path, format string, size uint64) Image {
 	return img
 }
 
+// LoadImage retreives the information of the specified image
+// file into an Image data structure
+func LoadImage(path string) (Image, error) {
+	type imgInfo struct {
+		Format string `json:"format"`
+		Size   uint64 `json:"virtual_size"`
+	}
+
+	var img Image
+	var info imgInfo
+
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		return img, err
+	}
+
+	cmd := exec.Command("qemu-img", "info", "--output=json", path)
+
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		return img, fmt.Errorf("'qemu-img info' output: %s", oneLine(out))
+	}
+
+	err = json.Unmarshal(out, &info)
+	if err != nil {
+		return img, fmt.Errorf("'qemu-img info' invalid json output: %s", oneLine(out))
+	}
+
+	img.Path = path
+	img.Format = info.Format
+	img.Size = info.Size
+
+	return img, nil
+}
+
 // SetBackingFile sets a backing file for the image
 // If it is specified, the image will only record the
 // differences from the backing file
@@ -64,7 +99,7 @@ func (i Image) Create() error {
 
 	out, err := cmd.CombinedOutput()
 	if err != nil {
-		return fmt.Errorf("qemu-img output: %s", oneLine(out))
+		return fmt.Errorf("'qemu-img create' output: %s", oneLine(out))
 	}
 
 	return nil
