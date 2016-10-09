@@ -107,6 +107,19 @@ func LoadImage(path string) (Image, error) {
 	return img, nil
 }
 
+// CreateSnapshot creates a snapshot of the image
+// with the specified name
+func (i *Image) CreateSnapshot(name string) error {
+	cmd := exec.Command("qemu-img", "snapshot", "-c", name, i.Path)
+
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("'qemu-img snapshot' output: %s", oneLine(out))
+	}
+
+	return nil
+}
+
 // Snapshots returns the snapshots contained
 // within the image
 func (i Image) Snapshots() []Snapshot {
