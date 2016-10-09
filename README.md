@@ -53,6 +53,25 @@ for _, snapshot := range snaps {
 }
 ```
 
+### Start a virtual machine
+
+```go
+img, err := qemu.OpenImage("debian.qcow2")
+if err != nil {
+	log.Fatal(err)
+}
+
+m := qemu.NewMachine(1, 512) // 1 CPU, 512MiB RAM
+m.AddDrive(img)
+
+pid, err := m.Start("x86_64", true) // x86_64 arch (using qemu-system-x86_64), with kvm
+if err != nil {
+	log.Fatal(err)
+}
+
+fmt.Println("QEMU started on PID", pid)
+```
+
 ## License
 
 WTFPL (Public Domain)
