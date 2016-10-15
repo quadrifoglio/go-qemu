@@ -10,8 +10,8 @@ import (
 
 // Machine represents a QEMU virtual machine
 type Machine struct {
-	Cores  int // Number of CPU cores
-	Memory int // RAM quantity in megabytes
+	Cores  int    // Number of CPU cores
+	Memory uint64 // RAM quantity in megabytes
 
 	drives []Drive
 }
@@ -24,7 +24,7 @@ type Drive struct {
 
 // NewMachine creates a new virtual machine
 // with the specified number of cpu cores and memory
-func NewMachine(cores, memory int) Machine {
+func NewMachine(cores int, memory uint64) Machine {
 	var machine Machine
 	machine.Cores = cores
 	machine.Memory = memory
@@ -35,8 +35,14 @@ func NewMachine(cores, memory int) Machine {
 
 // AddDrive attaches a new hard drive to
 // the virtual machine
-func (m *Machine) AddDrive(image Image) {
-	m.drives = append(m.drives, Drive{image.Path, image.Format})
+func (m *Machine) AddDrive(d Drive) {
+	m.drives = append(m.drives, d)
+}
+
+// AddDriveImage attaches the specified Image to
+// the virtual machine
+func (m *Machine) AddDriveImage(img Image) {
+	m.drives = append(m.drives, Drive{img.Path, img.Format})
 }
 
 // Start stars the machine
@@ -44,7 +50,7 @@ func (m *Machine) AddDrive(image Image) {
 // It returns the PID of the QEMU process and an error (if any)
 func (m *Machine) Start(arch string, kvm bool) (int, error) {
 	qemu := fmt.Sprintf("qemu-system-%s", arch)
-	args := []string{"-smp", strconv.Itoa(m.Cores), "-m", strconv.Itoa(m.Memory)}
+	args := []string{"-smp", strconv.Itoa(m.Cores), "-m", strconv.FormatUint(m.Memory, 10)}
 
 	if kvm {
 		args = append(args, "-enable-kvm")
