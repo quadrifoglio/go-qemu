@@ -14,6 +14,7 @@ type Machine struct {
 	Memory uint64 // RAM quantity in megabytes
 
 	drives []Drive
+	ifaces []NetDev
 }
 
 // Drive represents a machine hard drive
@@ -59,6 +60,20 @@ func (m *Machine) Start(arch string, kvm bool) (int, error) {
 	for _, drive := range m.drives {
 		args = append(args, "-drive")
 		args = append(args, fmt.Sprintf("file=%s,format=%s", drive.Path, drive.Format))
+	}
+
+	for _, iface := range m.ifaces {
+		s := fmt.Sprintf("id=%s", iface.ID)
+
+		if len(iface.IfName) > 0 {
+			s = fmt.Sprintf("%s,ifname=%s", s, iface.IfName)
+		}
+
+		args = append(args, "-netdev")
+		args = append(args, s)
+
+		args = append(args, "-device")
+		args = append(args, fmt.Sprintf("virtio-net,netdev=%s", iface.ID))
 	}
 
 	cmd := exec.Command(qemu, args...)
