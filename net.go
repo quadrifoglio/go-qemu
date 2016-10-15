@@ -9,6 +9,7 @@ type NetDev struct {
 	ID   string // Netdev ID
 
 	IfName string // TAP: interface name
+	MAC    string // TAP: Interface hardware address
 }
 
 // NewNetworkDevice creates a QEMU network
@@ -33,4 +34,10 @@ func NewNetworkDevice(t, id string) (NetDev, error) {
 // for the netdev (if supported by netdev type)
 func (n *NetDev) SetHostInterfaceName(name string) {
 	n.IfName = name
+}
+
+// SetMacAddress sets the mac address of the
+// netdev (if supported by netdev type)
+func (n *NetDev) SetMacAddress(mac string) {
+	n.MAC = mac
 }

@@ -70,7 +70,6 @@ func (m *Machine) Start(arch string, kvm bool) (int, error) {
 
 	for _, iface := range m.ifaces {
 		s := fmt.Sprintf("%s,id=%s", iface.Type, iface.ID)
-
 		if len(iface.IfName) > 0 {
 			s = fmt.Sprintf("%s,ifname=%s", s, iface.IfName)
 		}
@@ -78,8 +77,13 @@ func (m *Machine) Start(arch string, kvm bool) (int, error) {
 		args = append(args, "-netdev")
 		args = append(args, s)
 
+		s = fmt.Sprintf("virtio-net,netdev=%s", iface.ID)
+		if len(iface.MAC) > 0 {
+			s = fmt.Sprintf("%s,mac=%s", s, iface.MAC)
+		}
+
 		args = append(args, "-device")
-		args = append(args, fmt.Sprintf("virtio-net,netdev=%s", iface.ID))
+		args = append(args, s)
 	}
 
 	cmd := exec.Command(qemu, args...)
