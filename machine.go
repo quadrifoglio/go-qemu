@@ -69,7 +69,7 @@ func (m *Machine) Start(arch string, kvm bool) (int, error) {
 	}
 
 	for _, iface := range m.ifaces {
-		s := fmt.Sprintf("id=%s", iface.ID)
+		s := fmt.Sprintf("%s, id=%s", iface.Type, iface.ID)
 
 		if len(iface.IfName) > 0 {
 			s = fmt.Sprintf("%s,ifname=%s", s, iface.IfName)
