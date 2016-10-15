@@ -46,6 +46,12 @@ func (m *Machine) AddDriveImage(img Image) {
 	m.drives = append(m.drives, Drive{img.Path, img.Format})
 }
 
+// AddNetworkDevice attaches the specified netdev tp
+// the virtual machine
+func (m *Machine) AddNetworkDevice(netdev NetDev) {
+	m.ifaces = append(m.ifaces, netdev)
+}
+
 // Start stars the machine
 // The 'kvm' bool specifies if KVM should be used
 // It returns the PID of the QEMU process and an error (if any)

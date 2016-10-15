@@ -5,14 +5,15 @@ import (
 )
 
 type NetDev struct {
-	Type   string // Netdev type (host, tap...)
-	ID     string // Netdev ID
-	IfName string // Host TAP interface name
+	Type string // Netdev type (user, tap...)
+	ID   string // Netdev ID
+
+	IfName string // TAP: interface name
 }
 
 // NewNetworkDevice creates a QEMU network
 // device
-func NewNetworkDevice(t, id, ifname string) (NetDev, error) {
+func NewNetworkDevice(t, id string) (NetDev, error) {
 	var netdev NetDev
 
 	if t != "user" && t != "tap" {
@@ -24,7 +25,12 @@ func NewNetworkDevice(t, id, ifname string) (NetDev, error) {
 
 	netdev.Type = t
 	netdev.ID = id
-	netdev.IfName = ifname
 
 	return netdev, nil
+}
+
+// SetHostInterfaceName sets the host interface name
+// for the netdev (if supported by netdev type)
+func (n *NetDev) SetHostInterfaceName(name string) {
+	n.IfName = name
 }
