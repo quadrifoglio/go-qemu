@@ -13,6 +13,7 @@ type Machine struct {
 	Cores  int    // Number of CPU cores
 	Memory uint64 // RAM quantity in megabytes
 
+	vnc    string
 	drives []Drive
 	ifaces []NetDev
 }
@@ -52,6 +53,12 @@ func (m *Machine) AddNetworkDevice(netdev NetDev) {
 	m.ifaces = append(m.ifaces, netdev)
 }
 
+// AddVNC attaches a VNC server to
+// the virtual machine, bound to the specified address
+func (m *Machine) AddVNC(addr string) {
+	m.vnc = addr
+}
+
 // Start stars the machine
 // The 'kvm' bool specifies if KVM should be used
 // It returns the PID of the QEMU process and an error (if any)
@@ -84,6 +91,11 @@ func (m *Machine) Start(arch string, kvm bool) (int, error) {
 
 		args = append(args, "-device")
 		args = append(args, s)
+	}
+
+	if len(m.vnc) > 0 {
+		args = append(args, "-vnc")
+		args = append(args, m.vnc)
 	}
 
 	cmd := exec.Command(qemu, args...)
