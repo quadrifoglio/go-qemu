@@ -2,6 +2,7 @@ package qemu
 
 import (
 	"fmt"
+	"os"
 	"os/exec"
 	"strconv"
 	"syscall"
@@ -61,8 +62,8 @@ func (m *Machine) AddVNC(addr string, port int) {
 
 // Start stars the machine
 // The 'kvm' bool specifies if KVM should be used
-// It returns the PID of the QEMU process and an error (if any)
-func (m *Machine) Start(arch string, kvm bool) (int, error) {
+// It returns the QEMU process and an error (if any)
+func (m *Machine) Start(arch string, kvm bool) (*os.Process, error) {
 	qemu := fmt.Sprintf("qemu-system-%s", arch)
 	args := []string{"-smp", strconv.Itoa(m.Cores), "-m", strconv.FormatUint(m.Memory, 10)}
 
@@ -104,10 +105,10 @@ func (m *Machine) Start(arch string, kvm bool) (int, error) {
 
 	err := cmd.Start()
 	if err != nil {
-		return -1, err
+		return nil, err
 	}
 
-	pid := cmd.Process.Pid
+	proc := cmd.Process
 	errc := make(chan error)
 
 	go func() {
@@ -124,11 +125,11 @@ func (m *Machine) Start(arch string, kvm bool) (int, error) {
 	select {
 	case vmerr = <-errc:
 		if vmerr != nil {
-			return -1, vmerr
+			return nil, vmerr
 		}
 	default:
 		break
 	}
 
-	return pid, nil
+	return proc, nil
 }
