@@ -57,7 +57,7 @@ func (m *Machine) AddNetworkDevice(netdev NetDev) {
 // AddVNC attaches a VNC server to
 // the virtual machine, bound to the specified address
 func (m *Machine) AddVNC(addr string, port int) {
-	m.vnc = fmt.Sprintf("%s:%s", addr, port)
+	m.vnc = fmt.Sprintf("%s:%d", addr, port)
 }
 
 // Start stars the machine
