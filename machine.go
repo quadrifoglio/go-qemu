@@ -76,6 +76,11 @@ func (m *Machine) Start(arch string, kvm bool) (*os.Process, error) {
 		args = append(args, fmt.Sprintf("file=%s,format=%s", drive.Path, drive.Format))
 	}
 
+	if len(m.ifaces) == 0 {
+		args = append(args, "-net")
+		args = append(args, "none")
+	}
+
 	for _, iface := range m.ifaces {
 		s := fmt.Sprintf("%s,id=%s", iface.Type, iface.ID)
 		if len(iface.IfName) > 0 {
