@@ -62,8 +62,8 @@ func (m *Machine) AddVNC(addr string, port int) {
 }
 
 // AddMonitor redirects the QEMU monitor
-// to the specified host device
-func (m *Machine) AddMonitor(dev string) {
+// to the specified unix socket file
+func (m *Machine) AddMonitorUnix(dev string) {
 	m.monitor = dev
 }
 
@@ -112,8 +112,8 @@ func (m *Machine) Start(arch string, kvm bool) (*os.Process, error) {
 	}
 
 	if len(m.monitor) > 0 {
-		args = append(args, "-monitor")
-		args = append(args, m.monitor)
+		args = append(args, "-qmp")
+		args = append(args, fmt.Sprintf("unix:%s,server,nowait", m.monitor))
 	}
 
 	cmd := exec.Command(qemu, args...)
