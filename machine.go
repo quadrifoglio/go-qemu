@@ -14,9 +14,10 @@ type Machine struct {
 	Cores  int    // Number of CPU cores
 	Memory uint64 // RAM quantity in megabytes
 
-	vnc    string
-	drives []Drive
-	ifaces []NetDev
+	vnc     string
+	monitor string
+	drives  []Drive
+	ifaces  []NetDev
 }
 
 // Drive represents a machine hard drive
@@ -58,6 +59,12 @@ func (m *Machine) AddNetworkDevice(netdev NetDev) {
 // the virtual machine, bound to the specified address
 func (m *Machine) AddVNC(addr string, port int) {
 	m.vnc = fmt.Sprintf("%s:%d", addr, port)
+}
+
+// AddMonitor redirects the QEMU monitor
+// to the specified host device
+func (m *Machine) AddMonitor(dev string) {
+	m.monitor = dev
 }
 
 // Start stars the machine
@@ -102,6 +109,11 @@ func (m *Machine) Start(arch string, kvm bool) (*os.Process, error) {
 	if len(m.vnc) > 0 {
 		args = append(args, "-vnc")
 		args = append(args, m.vnc)
+	}
+
+	if len(m.monitor) > 0 {
+		args = append(args, "-monitor")
+		args = append(args, m.monitor)
 	}
 
 	cmd := exec.Command(qemu, args...)
