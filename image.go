@@ -166,6 +166,19 @@ func (i Image) RestoreSnapshot(name string) error {
 	return nil
 }
 
+// DeleteSnapshot deletes the the corresponding
+// snapshot from the image
+func (i Image) DeleteSnapshot(name string) error {
+	cmd := exec.Command("qemu-img", "snapshot", "-d", name, i.Path)
+
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("'qemu-img snapshot' output: %s", oneLine(out))
+	}
+
+	return nil
+}
+
 // SetBackingFile sets a backing file for the image
 // If it is specified, the image will only record the
 // differences from the backing file
