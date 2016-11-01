@@ -213,3 +213,18 @@ func (i Image) Create() error {
 
 	return nil
 }
+
+// Rebase changes the backing file of the image
+// to the specified file path
+func (i *Image) Rebase(backingFile string) error {
+	i.backingFile = backingFile
+
+	cmd := exec.Command("qemu-img", "rebase", "-b", backingFile, i.Path)
+
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("'qemu-img rebase' output: %s", oneLine(out))
+	}
+
+	return nil
+}
