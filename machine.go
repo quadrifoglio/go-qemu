@@ -14,6 +14,7 @@ type Machine struct {
 	Cores  int    // Number of CPU cores
 	Memory uint64 // RAM quantity in megabytes
 
+	cd      string
 	vnc     string
 	monitor string
 	drives  []Drive
@@ -35,6 +36,12 @@ func NewMachine(cores int, memory uint64) Machine {
 	machine.drives = make([]Drive, 0)
 
 	return machine
+}
+
+// AddCDRom attaches a disk image
+// as a CD-ROM on the machine
+func (m *Machine) AddCDRom(dev string) {
+	m.cd = dev
 }
 
 // AddDrive attaches a new hard drive to
@@ -76,6 +83,11 @@ func (m *Machine) Start(arch string, kvm bool) (*os.Process, error) {
 
 	if kvm {
 		args = append(args, "-enable-kvm")
+	}
+
+	if len(m.cd) > 0 {
+		args = append(args, "-cdrom")
+		args = append(args, m.cd)
 	}
 
 	for _, drive := range m.drives {
