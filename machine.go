@@ -15,6 +15,7 @@ type Machine struct {
 	Memory uint64 // RAM quantity in megabytes
 
 	cd      string
+	display string
 	vnc     string
 	monitor string
 	drives  []Drive
@@ -60,6 +61,12 @@ func (m *Machine) AddDriveImage(img Image) {
 // the virtual machine
 func (m *Machine) AddNetworkDevice(netdev NetDev) {
 	m.ifaces = append(m.ifaces, netdev)
+}
+
+// SetDisplay sets the display mode
+// for the virtual machine
+func (m *Machine) SetDisplay(mode string) {
+	m.display = mode
 }
 
 // AddVNC attaches a VNC server to
@@ -121,6 +128,14 @@ func (m *Machine) Start(arch string, kvm bool) (*os.Process, error) {
 	if len(m.vnc) > 0 {
 		args = append(args, "-vnc")
 		args = append(args, m.vnc)
+	} else if len(m.display) == 0 {
+		args = append(args, "-display")
+		args = append(args, "none")
+	}
+
+	if len(m.display) > 0 {
+		args = append(args, "-display")
+		args = append(args, m.display)
 	}
 
 	if len(m.monitor) > 0 {
