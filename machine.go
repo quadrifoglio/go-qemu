@@ -2,6 +2,7 @@ package qemu
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
 	"os/exec"
 	"strconv"
@@ -84,7 +85,7 @@ func (m *Machine) AddMonitorUnix(dev string) {
 // Start stars the machine
 // The 'kvm' bool specifies if KVM should be used
 // It returns the QEMU process and an error (if any)
-func (m *Machine) Start(arch string, kvm bool) (*os.Process, error) {
+func (m *Machine) Start(arch string, kvm bool, stderrCb func(s string)) (*os.Process, error) {
 	qemu := fmt.Sprintf("qemu-system-%s", arch)
 	args := []string{"-smp", strconv.Itoa(m.Cores), "-m", strconv.FormatUint(m.Memory, 10)}
 
@@ -147,7 +148,19 @@ func (m *Machine) Start(arch string, kvm bool) (*os.Process, error) {
 	cmd.SysProcAttr = new(syscall.SysProcAttr)
 	cmd.SysProcAttr.Setsid = true
 
-	err := cmd.Start()
+	stderr, err := cmd.StderrPipe()
+	if err == nil {
+		go func() {
+			s, err := ioutil.ReadAll(stderr)
+			if err != nil {
+				return
+			}
+
+			stderrCb(string(s))
+		}()
+	}
+
+	err = cmd.Start()
 	if err != nil {
 		return nil, err
 	}
