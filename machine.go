@@ -21,6 +21,8 @@ type Machine struct {
 	monitor string
 	drives  []Drive
 	ifaces  []NetDev
+
+	custom [][]string
 }
 
 // Drive represents a machine hard drive
@@ -71,15 +73,26 @@ func (m *Machine) SetDisplay(mode string) {
 }
 
 // AddVNC attaches a VNC server to
-// the virtual machine, bound to the specified address
-func (m *Machine) AddVNC(addr string, port int) {
+// the virtual machine, bound to the specified address and port
+// If wsPort is not 0, VNC will work over WebSocket on that port
+func (m *Machine) AddVNC(addr string, port, wsPort int) {
 	m.vnc = fmt.Sprintf("%s:%d", addr, port)
+
+	if wsPort > 0 {
+		m.vnc = fmt.Sprintf("%s,websocket=%d", m.vnc, wsPort)
+	}
 }
 
 // AddMonitor redirects the QEMU monitor
 // to the specified unix socket file
 func (m *Machine) AddMonitorUnix(dev string) {
 	m.monitor = dev
+}
+
+// AddOption adds a custom command line option
+// to the QEMU start command
+func (m *Machine) AddOption(opt, val string) {
+	m.custom = append(m.custom, []string{opt, val})
 }
 
 // Start stars the machine
@@ -142,6 +155,11 @@ func (m *Machine) Start(arch string, kvm bool, stderrCb func(s string)) (*os.Pro
 	if len(m.monitor) > 0 {
 		args = append(args, "-qmp")
 		args = append(args, fmt.Sprintf("unix:%s,server,nowait", m.monitor))
+	}
+
+	for _, c := range m.custom {
+		args = append(args, c[0])
+		args = append(args, c[1])
 	}
 
 	cmd := exec.Command(qemu, args...)
