@@ -75,11 +75,15 @@ func (m *Machine) SetDisplay(mode string) {
 // AddVNC attaches a VNC server to
 // the virtual machine, bound to the specified address and port
 // If wsPort is not 0, VNC will work over WebSocket on that port
-func (m *Machine) AddVNC(addr string, port, wsPort int) {
+func (m *Machine) AddVNC(addr string, port, wsPort int, passwd bool) {
 	m.vnc = fmt.Sprintf("%s:%d", addr, port)
 
 	if wsPort > 0 {
 		m.vnc = fmt.Sprintf("%s,websocket=%d", m.vnc, wsPort)
+
+		if passwd {
+			m.vnc = fmt.Sprintf("%s,password", m.vnc)
+		}
 	}
 }
 
