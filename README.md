@@ -64,7 +64,11 @@ if err != nil {
 m := qemu.NewMachine(1, 512) // 1 CPU, 512MiB RAM
 m.AddDrive(img)
 
-pid, err := m.Start("x86_64", true) // x86_64 arch (using qemu-system-x86_64), with kvm
+// x86_64 arch (using qemu-system-x86_64), with kvm
+pid, err := m.Start("x86_64", true, func(stderr string) {
+        log.Println("QEMU stderr:", stderr)
+})
+
 if err != nil {
 	log.Fatal(err)
 }
